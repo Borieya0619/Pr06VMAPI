@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상품 수정</title>
+</head>
+<body>
+<h1>상품 수정 페이지</h1>
+<form id="editForm">
+    <label for="nameInput">이름:</label>
+    <input type="text" id="nameInput" name="name"><br><br>
+
+    <label for="priceInput">가격:</label>
+    <input type="text" id="priceInput" name="price"><br><br>
+
+    <label for="limitDateInput">유효 기간:</label>
+    <input type="date" id="limitDateInput" name="limitDate"><br><br>
+
+    <button type="button" onclick="onEdit()">수정하기</button>
+</form>
+<br>
+<button onclick="window.location.href='/'">메인 페이지로 돌아가기</button>
+<script>
+    // URL에서 쿼리 문자열 파싱
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+
+    // "index" 파라미터 값 가져오기
+    const index = urlParams.get('index');
+
+    // // 가져온 인덱스 정보를 사용하여 해당 상품을 수정하고자 하는 작업을 수행합니다.
+    // console.log("Index of the product to be edited:", index);
+    function onEdit() {
+        const name = document.getElementById('nameInput').value;
+        const price = document.getElementById('priceInput').value;
+        const limitDate = document.getElementById('limitDateInput').value;
+        console.log((limitDate))
+        fetch('/api/v1/edit', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                id: index,
+                name: name,
+                price: price,
+                limit_date: limitDate
+            })
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to edit product');
+            }
+            alert("상품이 수정되었습니다!")
+            window.location.href = `/`;
+        }).catch(error => {
+            console.error('Error editing product:', error);
+        });
+
+    }
+</script>
+</body>
+</html>

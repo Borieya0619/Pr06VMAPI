@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>자판기 프로젝트</title>
+</head>
+<body>
+<h1 th:text="#{vm}"></h1>
+<ul id="product-list">
+</ul>
+<button id="add-product-btn" th:text="#{add_product}"></button>
+<a href="/changelocale">한영변환</a>
+<div id="add-product-form" style="display: none;">
+    <h2 th:text="#{add_product}"></h2>
+    <form id="product-form">
+        <label for="name" th:text="#{name}"></label>
+        <input type="text" id="name" name="name" required><br>
+        <label for="price" th:text="#{price}"></label>
+        <input type="number" id="price" name="price" required><br>
+        <label for="limit_date" th:text="#{limit_date}">Limit Date:</label>
+        <input type="date" id="limit_date" name="limit_date" required><br>
+        <button type="button" onclick="onAdd()" th:text="#{add_product}"></button>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 페이지가 로드될 때 서버로부터 상품 리스트를 가져와서 표시
+        fetch('/api/v1/all')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch product list');
+                }
+                return response.json();
+            })
+            .then(productList => {
+                const productListElement = document.getElementById("product-list");
+                productList.forEach((product, index) => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = `${product.name} - $${product.price} - ${product.limit_date}`;
+
+                    // 수정 버튼
+                    const editButton = document.createElement("button");
+                    editButton.textContent = "수정";
+                    editButton.addEventListener("click", function () {
+                        window.location.href = `edit?index=${index}`; // GET 요청
+                    });
+                    listItem.appendChild(editButton);
+
+                    // 삭제 버튼
+                    const deleteButton = document.createElement("button");
+                    deleteButton.textContent = "삭제";
+                    deleteButton.addEventListener("click", function () {
+                        fetch('/api/v1/delete', {
+                            method: 'POST',
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify({
+                                id: index
+                            })
+                        }).then(response => {
+                            if (!response.ok) {
+                                throw new Error('Failed to delete product');
+                            }
+
+                            alert("상품이 삭제되었습니다!")
+                            location.reload();
+                        }).catch(error => {
+                            console.error('Error deleting product:', error);
+                        });
+                    });
+                    listItem.appendChild(deleteButton);
+
+
+                    productListElement.appendChild(listItem);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching product list:', error);
+            });
+
+        // 상품 추가 버튼 클릭 시 상품 추가 폼을 표시
+        document.getElementById("add-product-btn").addEventListener("click", function () {
+            document.getElementById("add-product-form").style.display = "block";
+        });
+
+    });
+    function onAdd() {
+        const name = document.getElementById('name').value;
+        const price = document.getElementById('price').value;
+        const limitDate = document.getElementById('limit_date').value;
+        console.log(limitDate)
+        fetch('/api/v1/add', {
+            method: 'POST',
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                name: name,
+                price: price,
+                limit_date: limitDate
+            })
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to edit product');
+            }
+            // 상품 추가 성공 시 페이지 새로고침
+            alert("상품이 추가되었습니다!")
+            location.reload();
+        }).catch(error => {
+            console.error('Error editing product:', error);
+        });
+
+    }
+
+</script>
+</body>
+</html>
